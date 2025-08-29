@@ -4,7 +4,7 @@ A PowerShell module for comparing Azure Policy Initiatives to identify overlappi
 
 ## Author
 
-**Bart Pasmans** - Policy compliance and governance automation specialist  
+**Bart Pasmans**
 Company: bartpasmans.tech
 
 ## Features
@@ -60,6 +60,98 @@ Start-AzPolicyInitiativeComparison
 # Launch with HTML report export
 Start-AzPolicyInitiativeComparison -OutputHtml "comparison-report.html"
 ```
+
+## Visual Walkthrough
+
+This section shows the step-by-step process of running the Azure Policy Initiative Comparison tool.
+
+### Step 1: Starting the Tool
+![Step 1 - Starting the Tool](screenshots/1_Start.png)
+
+When you run `Start-AzPolicyInitiativeComparison`, the tool begins by:
+- Checking for required PowerShell modules (Az.Resources)
+- Connecting to your Azure account
+- Displaying the tool header and version information
+
+### Step 2: Loading Policy Initiatives
+![Step 2 - Loading Initiatives](screenshots/2_loadedInitiatives.png)
+
+The tool automatically:
+- Retrieves all policy initiatives from your Azure subscription
+- Counts and displays the total number of initiatives found
+- Sorts initiatives alphabetically by display name
+- Prepares the numbered list for selection
+
+### Step 3: Selecting Source Initiative
+![Step 3 - Select Source Initiative](screenshots/3_SelectSourceInitiative.png)
+
+In this step:
+- All available policy initiatives are displayed in a formatted table
+- Each initiative shows: Number, Name, Type (Built-in/Custom), Policy Count, and Original ID
+- You select the SOURCE initiative by entering its number
+- The tool confirms your selection
+
+### Step 4: Selecting Compare Initiative
+![Step 4 - Select Compare Initiative](screenshots/4_SelectCompareInitiative.png)
+
+Next, you:
+- Choose the initiative to COMPARE against your source
+- The same numbered list is displayed again
+- Select a different initiative number for comparison
+- The tool confirms your second selection
+
+### Step 5: Processing and Analysis
+![Step 5 - Wait for Completion](screenshots/5_WaitForCompletion.png)
+
+The tool then:
+- Retrieves all policies from both selected initiatives
+- Shows progress indicators during policy retrieval
+- Analyzes policy overlaps and differences
+- Processes each policy definition to extract names and categories
+
+### Step 6: Comparison Summary
+![Step 6 - Check Summary](screenshots/6_CheckSummary.png)
+
+Finally, the results are displayed:
+- **Source Initiative**: Name, type, and total policy count
+- **Compare Initiative**: Name, type, and total policy count  
+- **Policy Analysis**: Number of overlapping, missing, and extra policies
+- **Detailed Lists**: Complete enumeration of missing and extra policies
+
+### Step 7: HTML Report Overview (Page 1)
+![Step 7 - HTML Report Overview 1](screenshots/7_ReportHTMLOverview1.png)
+
+If you specified an HTML output file, a professional report is generated containing:
+- Report header with generation timestamp
+- Initiative comparison table with key metrics
+- Clean, professional styling for easy reading
+
+### Step 8: HTML Report - Policy Overlap Section
+![Step 8 - Report Overview 2](screenshots/8_ReportOverview2.png)
+
+The HTML report includes:
+- **Policy Overlap Section**: Lists all policies that exist in both initiatives
+- Color-coded sections (green for overlaps)
+- Each policy displayed as an individual item
+- Easy-to-scan format for quick analysis
+
+### Step 9: HTML Report - Missing Policies Section
+![Step 9 - Report Overview 3](screenshots/9_ReportOverview3.png)
+
+The report continues with:
+- **Missing Policies Section**: Shows policies from source that aren't in compare initiative
+- Color-coded in red to highlight gaps
+- Detailed policy names for compliance mapping
+- Helps identify what needs to be added to target initiative
+
+### Step 10: HTML Report - Extra Policies Section
+![Step 10 - Report Overview 4](screenshots/10_ReportOverview4.png)
+
+The final section shows:
+- **Extra Policies**: Policies in compare initiative but not in source
+- Color-coded in blue/purple to distinguish from missing policies
+- Useful for understanding additional coverage in target initiative
+- Complete, searchable format for detailed analysis
 
 ## Functions
 
