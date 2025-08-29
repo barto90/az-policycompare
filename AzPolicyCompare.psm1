@@ -1,34 +1,3 @@
-<#
-.SYNOPSIS
-    Azure Policy Initiative Comparison Tool v1.0
-
-.DESCRIPTION
-    Compares two Azure Policy Initiatives and identifies overlapping policies, 
-    missing policies, and provides detailed analysis for compliance mapping.
-
-.PARAMETER OutputHtml
-    Optional path to export the comparison results as HTML
-
-.EXAMPLE
-    .\PolicyCompare.ps1
-    Interactive mode - prompts for initiative selection
-
-.EXAMPLE
-    .\PolicyCompare.ps1 -OutputHtml "comparison-report.html"
-    Interactive mode with HTML export
-
-.NOTES
-    Version: 1.0
-    Requires: Az.Resources PowerShell module
-#>
-
-#Requires -Modules Az.Resources
-
-param(
-    [Parameter(Mandatory = $false)]
-    [string]$OutputHtml
-)
-
 function Test-RequiredModules {
     Write-Host "Checking required modules..." -ForegroundColor Cyan
     $requiredModules = @("Az.Resources")
@@ -300,52 +269,82 @@ function Export-ToHtml {
     $html | Out-File -FilePath $FilePath -Encoding UTF8
     Write-Host "HTML report exported to: $FilePath" -ForegroundColor Green
 }
-try {
-    Write-Host "Azure Policy Initiative Comparison Tool v1.0" -ForegroundColor Cyan
-Write-Host "=============================================" -ForegroundColor Cyan
-    Test-RequiredModules
-    Connect-ToAzure
-    $initiatives = Get-AllInitiatives
-    Write-Host "`nSTEP 1: Select the SOURCE initiative" -ForegroundColor Yellow
-    $sourceInitiative = Select-Initiative -Initiatives $initiatives -Purpose "Which initiative do you want to use as SOURCE?"
-    Write-Host "`nSTEP 2: Select the initiative to COMPARE with" -ForegroundColor Yellow
-    $compareInitiative = Select-Initiative -Initiatives $initiatives -Purpose "Which initiative do you want to COMPARE with the source?"
-    $comparison = Compare-Initiatives -SourceInitiative $sourceInitiative -CompareInitiative $compareInitiative
-    Write-Host "`nCOMPARISON SUMMARY" -ForegroundColor Green
-    Write-Host "==================" -ForegroundColor Green
-    if ($sourceInitiative.Name -eq $compareInitiative.Name) {
-        Write-Host "`nWarning: You selected the same initiative for both source and comparison." -ForegroundColor Yellow
-    }
-    Write-Host "`n1. SOURCE Initiative:" -ForegroundColor Cyan
-    Write-Host "   Name: $($sourceInitiative.Name)" -ForegroundColor White
-    Write-Host "   Type: $($sourceInitiative.Type)" -ForegroundColor White
-    Write-Host "   Number of policies: $($comparison.SourceTotal)" -ForegroundColor White
-    Write-Host "`n2. COMPARE Initiative:" -ForegroundColor Cyan
-    Write-Host "   Name: $($compareInitiative.Name)" -ForegroundColor White
-    Write-Host "   Type: $($compareInitiative.Type)" -ForegroundColor White
-    Write-Host "   Number of policies: $($comparison.CompareTotal)" -ForegroundColor White
-    Write-Host "`n3. POLICY ANALYSIS:" -ForegroundColor Yellow
-    Write-Host "   Overlapping policies: $($comparison.OverlapCount)" -ForegroundColor Green
-    Write-Host "   Policies missing in '$($compareInitiative.Name)': $($comparison.MissingInCompareCount)" -ForegroundColor Red
-    Write-Host "   Extra policies in '$($compareInitiative.Name)': $($comparison.MissingInSourceCount)" -ForegroundColor Magenta
-    if ($comparison.MissingInCompareCount -gt 0) {
-        Write-Host "`n   Policies from SOURCE missing in COMPARE initiative:" -ForegroundColor Red
-        foreach ($missingPolicy in $comparison.MissingInComparePolicies) {
-            Write-Host "   - $($missingPolicy.PolicyName)" -ForegroundColor White
+
+function Start-AzPolicyInitiativeComparison {
+    <#
+    .SYNOPSIS
+        Azure Policy Initiative Comparison Tool v1.0
+
+    .DESCRIPTION
+        Compares two Azure Policy Initiatives and identifies overlapping policies, 
+        missing policies, and provides detailed analysis for compliance mapping.
+
+    .PARAMETER OutputHtml
+        Optional path to export the comparison results as HTML
+
+    .EXAMPLE
+        Start-AzPolicyInitiativeComparison
+        Interactive mode - prompts for initiative selection
+
+    .EXAMPLE
+        Start-AzPolicyInitiativeComparison -OutputHtml "comparison-report.html"
+        Interactive mode with HTML export
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [string]$OutputHtml
+    )
+    
+    try {
+        Write-Host "Azure Policy Initiative Comparison Tool v1.0" -ForegroundColor Cyan
+        Write-Host "=============================================" -ForegroundColor Cyan
+        Test-RequiredModules
+        Connect-ToAzure
+        $initiatives = Get-AllInitiatives
+        Write-Host "`nSTEP 1: Select the SOURCE initiative" -ForegroundColor Yellow
+        $sourceInitiative = Select-Initiative -Initiatives $initiatives -Purpose "Which initiative do you want to use as SOURCE?"
+        Write-Host "`nSTEP 2: Select the initiative to COMPARE with" -ForegroundColor Yellow
+        $compareInitiative = Select-Initiative -Initiatives $initiatives -Purpose "Which initiative do you want to COMPARE with the source?"
+        $comparison = Compare-Initiatives -SourceInitiative $sourceInitiative -CompareInitiative $compareInitiative
+        Write-Host "`nCOMPARISON SUMMARY" -ForegroundColor Green
+        Write-Host "==================" -ForegroundColor Green
+        if ($sourceInitiative.Name -eq $compareInitiative.Name) {
+            Write-Host "`nWarning: You selected the same initiative for both source and comparison." -ForegroundColor Yellow
         }
-    }
-    if ($comparison.MissingInSourceCount -gt 0) {
-        Write-Host "`n   Extra policies in COMPARE initiative (not in SOURCE):" -ForegroundColor Magenta
-        foreach ($extraPolicy in $comparison.MissingInSourcePolicies) {
-            Write-Host "   + $($extraPolicy.PolicyName)" -ForegroundColor White
+        Write-Host "`n1. SOURCE Initiative:" -ForegroundColor Cyan
+        Write-Host "   Name: $($sourceInitiative.Name)" -ForegroundColor White
+        Write-Host "   Type: $($sourceInitiative.Type)" -ForegroundColor White
+        Write-Host "   Number of policies: $($comparison.SourceTotal)" -ForegroundColor White
+        Write-Host "`n2. COMPARE Initiative:" -ForegroundColor Cyan
+        Write-Host "   Name: $($compareInitiative.Name)" -ForegroundColor White
+        Write-Host "   Type: $($compareInitiative.Type)" -ForegroundColor White
+        Write-Host "   Number of policies: $($comparison.CompareTotal)" -ForegroundColor White
+        Write-Host "`n3. POLICY ANALYSIS:" -ForegroundColor Yellow
+        Write-Host "   Overlapping policies: $($comparison.OverlapCount)" -ForegroundColor Green
+        Write-Host "   Policies missing in '$($compareInitiative.Name)': $($comparison.MissingInCompareCount)" -ForegroundColor Red
+        Write-Host "   Extra policies in '$($compareInitiative.Name)': $($comparison.MissingInSourceCount)" -ForegroundColor Magenta
+        if ($comparison.MissingInCompareCount -gt 0) {
+            Write-Host "`n   Policies from SOURCE missing in COMPARE initiative:" -ForegroundColor Red
+            foreach ($missingPolicy in $comparison.MissingInComparePolicies) {
+                Write-Host "   - $($missingPolicy.PolicyName)" -ForegroundColor White
+            }
         }
+        if ($comparison.MissingInSourceCount -gt 0) {
+            Write-Host "`n   Extra policies in COMPARE initiative (not in SOURCE):" -ForegroundColor Magenta
+            foreach ($extraPolicy in $comparison.MissingInSourcePolicies) {
+                Write-Host "   + $($extraPolicy.PolicyName)" -ForegroundColor White
+            }
+        }
+        if ($OutputHtml) {
+            Export-ToHtml -SourceInitiative $sourceInitiative -CompareInitiative $compareInitiative -Comparison $comparison -FilePath $OutputHtml
+        }
+        Write-Host "`nScript completed successfully!" -ForegroundColor Green
     }
-    if ($OutputHtml) {
-        Export-ToHtml -SourceInitiative $sourceInitiative -CompareInitiative $compareInitiative -Comparison $comparison -FilePath $OutputHtml
+    catch {
+        Write-Error "Script execution failed: $($_.Exception.Message)"
+        exit 1
     }
-    Write-Host "`nScript completed successfully!" -ForegroundColor Green
 }
-catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
-    exit 1
-}
+
+Export-ModuleMember -Function Start-AzPolicyInitiativeComparison
